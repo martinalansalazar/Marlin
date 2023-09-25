@@ -33,7 +33,8 @@
 FilamentRunoutSensor runout;
 
 bool FilamentRunoutSensor::filament_ran_out; // = false
-uint8_t FilamentRunoutSensor::runout_count; // = 0
+uint16_t FilamentRunoutSensor::runout_count; // = 0
+bool FilamentRunoutSensor::filament_check_enable = false;		
 
 void FilamentRunoutSensor::setup() {
 

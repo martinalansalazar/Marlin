@@ -27,13 +27,6 @@
 
 #define _UxGT(a) a
 
-// Define SIMULATE_ROMFONT to see what is seen on the character based display defined in Configuration.h
-//#define SIMULATE_ROMFONT
-
-// Fallback if no language is set. DON'T CHANGE
-#ifndef LCD_LANGUAGE
-  #define LCD_LANGUAGE en
-#endif
 
 // For character-based LCD controllers (DISPLAY_CHARSET_HD44780)
 #define JAPANESE 1
@@ -68,10 +61,8 @@
 // it         Italian
 // kana       Japanese
 // kana_utf8  Japanese (UTF8)
-// ko_kr      Korean
 // nl         Dutch
 // pl         Polish
-// pl_utf8    Polish (UTF8)
 // pt         Portuguese
 // pt-br      Portuguese (Brazilian)
 // pt-br_utf8 Portuguese (Brazilian) (UTF8)
@@ -139,7 +130,7 @@
 #define MSG_INVALID_EXTRUDER                "Invalid extruder"
 #define MSG_INVALID_SOLENOID                "Invalid solenoid"
 #define MSG_ERR_NO_THERMISTORS              "No thermistors - no temperature"
-#define MSG_M115_REPORT                     "FIRMWARE_NAME:Marlin " DETAILED_BUILD_VERSION " SOURCE_CODE_URL:" SOURCE_CODE_URL " PROTOCOL_VERSION:" PROTOCOL_VERSION " MACHINE_TYPE:" MACHINE_NAME " EXTRUDER_COUNT:" STRINGIFY(EXTRUDERS) " UUID:" MACHINE_UUID
+#define MSG_M115_REPORT                     "FIRMWARE_NAME:Marlin FIRMWARE_VERSION:" SHORT_BUILD_VERSION " HARDWARE_VERSION:" HARDWARE_VERSION " SOURCE_CODE_URL:" SOURCE_CODE_URL " PROTOCOL_VERSION:" PROTOCOL_VERSION " MACHINE_TYPE:" MACHINE_NAME " EXTRUDER_COUNT:" STRINGIFY(EXTRUDERS) " UUID:" MACHINE_UUID
 #define MSG_COUNT_X                         " Count X:"
 #define MSG_COUNT_A                         " Count A:"
 #define MSG_ERR_KILLED                      "Printer halted. kill() called!"
@@ -198,7 +189,7 @@
 #define MSG_SD_SIZE                         " Size: "
 #define MSG_SD_FILE_SELECTED                "File selected"
 #define MSG_SD_WRITE_TO_FILE                "Writing to file: "
-#define MSG_SD_PRINTING_BYTE                "SD printing byte "
+#define MSG_SD_PRINTING_BYTE                "SD printing byte:"
 #define MSG_SD_NOT_PRINTING                 "Not SD printing"
 #define MSG_SD_ERR_WRITE_TO_FILE            "error writing to file"
 #define MSG_SD_ERR_READ                     "SD read error"
@@ -322,7 +313,6 @@
  && DISABLED(DISPLAY_CHARSET_ISO10646_1) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_5) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_KANA) \
- && DISABLED(DISPLAY_CHARSET_ISO10646_KO_KR) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_GREEK) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_CN) \
  && DISABLED(DISPLAY_CHARSET_ISO10646_TR) \
@@ -332,6 +322,33 @@
   #define DISPLAY_CHARSET_ISO10646_1 // use the better font on full graphic displays.
 #endif
 
+#define MSG_CHECKFILESIZE		"CHECKFILESIZE:"
+#define MSG_WIFINOTCONNECTED	"NO WIFI MODULE"
+#define MSG_UNKNOWN				"UNKNOWN"
+#define MSG_BUFFER_EMPTY		"BUFFER_EMPTY"
+
+#define MSG_DEBUG_MENU			"Testing Menu"
+#define MSG_DEBUG_MOTOR			"Motor"
+#define MSG_DEBUG_WIFI			"Wifi"
+#define MSG_DEBUG_DISABLE		"Disable Menu"
+#define MSG_DEBUG_SENSOR		"Sensor"
+
+#define MSG_DEBUG_MOTOR_1		"Motor Test"
+#define MSG_DEBUG_MOTOR_2		"4 motors running"
+#define MSG_DEBUG_MOTOR_3		"at the same time"
+#define MSG_DEBUG_MOTOR_4		"click to return"
+
+#define MSG_DEBUG_SENSOR_ON		"On"
+#define MSG_DEBUG_SENSOR_OFF	"Off"
+#define MSG_DEBUG_SENSOR_DOOR	"door"
+
+#define MSG_LANGUAGE_KANA		"Japanese"
+#define MSG_LANGUAGE_PT			"Portuguese"
+#define MSG_LANGUAGE_NL			"Dutch"
+#define MSG_LANGUAGE_RU			"Russian"
+#define MSG_LANGUAGE_TR			"Turkish"
+
 #include "language_en.h"
+#include "language_multi.h"
 
 #endif // __LANGUAGE_H

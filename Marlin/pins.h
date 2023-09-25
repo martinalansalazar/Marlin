@@ -140,8 +140,6 @@
   #include "pins_TRIGORILLA_14.h"     // ATmega2560                                 env:megaatmega2560
 #elif MB(RAMPS_ENDER_4)
   #include "pins_RAMPS_ENDER_4.h"     // ATmega2560                                 env:megaatmega2560
-#elif MB(MKS_GEN_L_V2)
-  #include "pins_MKS_GEN_L_V2.h"      // ATmega2560                                 env:megaatmega2560
 
 //
 // Other ATmega1280, ATmega2560
@@ -183,6 +181,16 @@
   #include "pins_GT2560_REV_A.h"      // ATmega1280, ATmega2560                     env:megaatmega1280 env:megaatmega2560
 #elif MB(GT2560_REV_A_PLUS)
   #include "pins_GT2560_REV_A_PLUS.h" // ATmega1280, ATmega2560                     env:megaatmega1280 env:megaatmega2560
+#elif MB(WEEDO_62A)
+#include "pins_WEEDO_62A.h"
+#elif MB(WEEDO_62B)
+#include "pins_WEEDO_62B.h"
+#elif MB(WEEDO_62V1)
+#include "pins_WEEDO_62V1.h"
+#elif MB(WEEDO_61A)
+#include "pins_WEEDO_61A.h"
+#elif MB(WEEDO_61B)
+#include "pins_WEEDO_61B.h"
 
 //
 // ATmega1281, ATmega2561

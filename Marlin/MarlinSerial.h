@@ -20,23 +20,11 @@
  *
  */
 
-/**
- * MarlinSerial.h - Hardware serial library for Wiring
- * Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
- *
- * Modified 28 September 2010 by Mark Sproul
- * Modified 14 February 2016 by Andreas Hardtung (added tx buffer)
- * Modified 01 October 2017 by Eduardo José Tagle (added XON/XOFF)
- */
-
 #ifndef _MARLINSERIAL_H_
 #define _MARLINSERIAL_H_
 
 #include "MarlinConfig.h"
 
-#ifndef SERIAL_PORT
-  #define SERIAL_PORT 0
-#endif
 
 // The presence of the UBRRH register is used to detect a UART.
 #define UART_PRESENT(port) ((port == 0 && (defined(UBRRH) || defined(UBRR0H))) || \
@@ -52,26 +40,6 @@
   #define SERIAL_REGNAME_INTERNAL(registerbase,number,suffix) registerbase##number##suffix
 #endif
 
-// Registers used by MarlinSerial class (expanded depending on selected serial port)
-#define M_UCSRxA           SERIAL_REGNAME(UCSR,SERIAL_PORT,A) // defines M_UCSRxA to be UCSRnA where n is the serial port number
-#define M_UCSRxB           SERIAL_REGNAME(UCSR,SERIAL_PORT,B)
-#define M_RXENx            SERIAL_REGNAME(RXEN,SERIAL_PORT,)
-#define M_TXENx            SERIAL_REGNAME(TXEN,SERIAL_PORT,)
-#define M_TXCx             SERIAL_REGNAME(TXC,SERIAL_PORT,)
-#define M_RXCIEx           SERIAL_REGNAME(RXCIE,SERIAL_PORT,)
-#define M_UDREx            SERIAL_REGNAME(UDRE,SERIAL_PORT,)
-#define M_FEx              SERIAL_REGNAME(FE,SERIAL_PORT,)
-#define M_DORx             SERIAL_REGNAME(DOR,SERIAL_PORT,)
-#define M_UPEx             SERIAL_REGNAME(UPE,SERIAL_PORT,)
-#define M_UDRIEx           SERIAL_REGNAME(UDRIE,SERIAL_PORT,)
-#define M_UDRx             SERIAL_REGNAME(UDR,SERIAL_PORT,)
-#define M_UBRRxH           SERIAL_REGNAME(UBRR,SERIAL_PORT,H)
-#define M_UBRRxL           SERIAL_REGNAME(UBRR,SERIAL_PORT,L)
-#define M_RXCx             SERIAL_REGNAME(RXC,SERIAL_PORT,)
-#define M_USARTx_RX_vect   SERIAL_REGNAME(USART,SERIAL_PORT,_RX_vect)
-#define M_U2Xx             SERIAL_REGNAME(U2X,SERIAL_PORT,)
-#define M_USARTx_UDRE_vect SERIAL_REGNAME(USART,SERIAL_PORT,_UDRE_vect)
-
 #define DEC 10
 #define HEX 16
 #define OCT 8
@@ -82,7 +50,7 @@
 // Use only 0 or powers of 2 greater than 1
 // : [0, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, ...]
 #ifndef RX_BUFFER_SIZE
-  #define RX_BUFFER_SIZE 128
+  #define RX_BUFFER_SIZE 256
 #endif
 // 256 is the max TX buffer limit due to uint8_t head and tail.
 #ifndef TX_BUFFER_SIZE
@@ -113,38 +81,28 @@
     extern ring_buffer_pos_t rx_max_enqueued;
   #endif
 
-  class MarlinSerial {
+  class MarlinSerial 
+  {
 
     public:
       MarlinSerial() {};
       static void begin(const long);
       static void end();
-      static int peek(void);
-      static int read(void);
+      static int peek0(void);
+	  static int peek3(void);
+      static int read0(void);
+	  static int read3(void);
       static void flush(void);
-      static ring_buffer_pos_t available(void);
-      static void write(const uint8_t c);
-      static void flushTX(void);
+      static ring_buffer_pos_t available0(void);
+	  static ring_buffer_pos_t available3(void);
+      static void write0(const uint8_t c);
+	  static void write3(const uint8_t c);
+      static void flushTX0(void);
+	  static void flushTX3(void);
 
-      #if ENABLED(SERIAL_STATS_DROPPED_RX)
-        FORCE_INLINE static uint32_t dropped() { return rx_dropped_bytes; }
-      #endif
-
-      #if ENABLED(SERIAL_STATS_RX_BUFFER_OVERRUNS)
-        FORCE_INLINE static uint32_t buffer_overruns() { return rx_buffer_overruns; }
-      #endif
-
-      #if ENABLED(SERIAL_STATS_RX_FRAMING_ERRORS)
-        FORCE_INLINE static uint32_t framing_errors() { return rx_framing_errors; }
-      #endif
-
-      #if ENABLED(SERIAL_STATS_MAX_RX_QUEUED)
-        FORCE_INLINE static ring_buffer_pos_t rxMaxEnqueued() { return rx_max_enqueued; }
-      #endif
-
-      FORCE_INLINE static void write(const char* str) { while (*str) write(*str++); }
-      FORCE_INLINE static void write(const uint8_t* buffer, size_t size) { while (size--) write(*buffer++); }
-      FORCE_INLINE static void print(const String& s) { for (int i = 0; i < (int)s.length(); i++) write(s[i]); }
+	  FORCE_INLINE static void write(const char* str) { while (*str) { write0(*str); write3(*str++); }; }
+	  FORCE_INLINE static void write(const uint8_t* buffer, size_t size) { while (size--) { write0(*buffer); write3(*buffer++); }; }
+	  FORCE_INLINE static void print(const String& s) { for (int i = 0; i < (int)s.length(); i++) { write0(s[i]); write3(s[i]); }; }
       FORCE_INLINE static void print(const char* str) { write(str); }
 
       static void print(char, int = BYTE);
@@ -175,10 +133,5 @@
   extern MarlinSerial customizedSerial;
 
 #endif // USE_MARLINSERIAL
-
-// Use the UART for Bluetooth in AT90USB configurations
-#if !USE_MARLINSERIAL && ENABLED(BLUETOOTH)
-  extern HardwareSerial bluetoothSerial;
-#endif
 
 #endif // _MARLINSERIAL_H_

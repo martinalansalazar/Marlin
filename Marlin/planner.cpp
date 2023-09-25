@@ -1169,11 +1169,8 @@ void Planner::recalculate() {
  * Maintain fans, paste extruder pressure,
  */
 void Planner::check_axes_activity() {
-  uint8_t axis_active[NUM_AXIS] = { 0 };
-
-  #if FAN_COUNT > 0
-    uint8_t tail_fan_speed[FAN_COUNT] = { 0 };
-  #endif
+  unsigned char axis_active[NUM_AXIS] = { 0 },
+                tail_fan_speed[FAN_COUNT];
 
   #if ENABLED(BARICUDA)
     #if HAS_HEATER_1
@@ -1539,7 +1536,7 @@ float Planner::get_axis_position_mm(const AxisEnum axis) {
 /**
  * Block until all buffered steps are executed / cleaned
  */
-void Planner::synchronize() { while (has_blocks_queued() || cleaning_buffer_counter) idle(); }
+void Planner::synchronize() { wtvar_wait_emove = true;  while ((has_blocks_queued() || cleaning_buffer_counter) && wtvar_wait_emove) idle(); }
 
 #if ENABLED(UNREGISTERED_MOVE_SUPPORT)
   #define COUNT_MOVE count_it

@@ -33,6 +33,7 @@
 #include <avr/interrupt.h>
 
 #include "MarlinConfig.h"
+#include "WTCMD.h"		
 
 #ifdef DEBUG_GCODE_PARSER
   #include "parser.h"
@@ -643,5 +644,34 @@ void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm
 #if !HAS_BED_PROBE
   FORCE_INLINE bool position_is_reachable_by_probe(const float &rx, const float &ry) { return position_is_reachable(rx, ry); }
 #endif
+
+#if HAS_BUZZER
+extern bool buzzerflg;
+#endif 
+
+#define LANGUAGE_EN		0
+#define LANGUAGE_CN		1
+#define LANGUAGE_FR		2
+#define LANGUAGE_DE		3
+#define LANGUAGE_ES		4
+#define LANGUAGE_IT		5
+#define LANGUAGE_KANA	6
+#define LANGUAGE_PT		7
+#define LANGUAGE_NL		8
+#define LANGUAGE_TR		9
+#define LANGUAGE_KR		10
+
+extern uint8_t wtvar_showWelcome;
+extern uint8_t wtvar_gohome;
+extern uint8_t wtvar_goDebugMenu;
+extern uint8_t wtvar_language;
+extern uint8_t wtvar_enablefilamentruncout;
+extern uint8_t door_enable;
+extern short int plateLevelStatus;
+extern bool wtvar_uart0_binmode;
+extern bool wtvar_click_cancel_heat;
+extern bool wtvar_wait_emove;
+extern bool wtvar_click_cancel_emove;
+extern uint8_t wtvar_Z_MAX_POS;
 
 #endif // MARLIN_H

@@ -29,9 +29,11 @@
 
 #define SD_RESORT ENABLED(SDCARD_SORT_ALPHA) && ENABLED(SDSORT_DYNAMIC_RAM)
 
-#define MAX_DIR_DEPTH 10          // Maximum folder depth
+#define MAX_DIR_DEPTH 3        
 
 #include "SdFile.h"
+
+#include "WTPacket.h"
 
 class CardReader {
 public:
@@ -42,40 +44,61 @@ public:
 
   void beginautostart();
   void checkautostart();
+  bool openFile(char * const path, const bool read, const bool subcall=false);
 
-  void openFile(char * const path, const bool read, const bool subcall=false);
+  void appendFile(char * const path);
+
   void openLogFile(char * const path);
-  void removeFile(const char * const name);
+
+  int removeFile(const char * const name);
+
   void closefile(const bool store_location=false);
+
   void release();
+
   void openAndPrintFile(const char *name);
+  
   void startFileprint();
+
   void stopSDPrint(
     #if SD_RESORT
       const bool re_sort=false
     #endif
   );
+
   void getStatus();
+
+  int getPrintPercent();
+
   void printingHasFinished();
+
   void printFilename();
+
+  void getPrintingFilename(char* filename);
 
   #if ENABLED(LONG_FILENAME_HOST_SUPPORT)
     void printLongPath(char *path);
   #endif
 
   void getfilename(uint16_t nr, const char* const match=NULL);
+
   uint16_t getnrfilenames();
 
   void getAbsFilename(char *t);
 
   void ls();
+
   void chdir(const char *relpath);
+
   int8_t updir();
+
   void setroot();
 
   const char* diveToFile(SdFile*& curDir, const char * const path, const bool echo);
 
   uint16_t get_num_Files();
+
+  bool write(const void* buf, uint16_t nbyte);
 
   #if ENABLED(SDCARD_SORT_ALPHA)
     void presort();
@@ -97,12 +120,19 @@ public:
   #endif
 
   FORCE_INLINE void pauseSDPrint() { sdprinting = false; }
+
   FORCE_INLINE bool isFileOpen() { return file.isOpen(); }
+
   FORCE_INLINE bool eof() { return sdpos >= filesize; }
+
   FORCE_INLINE int16_t get() { sdpos = file.curPosition(); return (int16_t)file.read(); }
+
   FORCE_INLINE void setIndex(const uint32_t index) { sdpos = index; file.seekSet(index); }
+
   FORCE_INLINE uint32_t getIndex() { return sdpos; }
+
   FORCE_INLINE uint8_t percentDone() { return (isFileOpen() && filesize) ? sdpos / ((filesize + 99) / 100) : 0; }
+
   FORCE_INLINE char* getWorkDirName() { workDir.getFilename(filename); return filename; }
 
   #if ENABLED(AUTO_REPORT_SD_STATUS)
@@ -116,8 +146,12 @@ public:
 
   FORCE_INLINE char* longest_filename() { return longFilename[0] ? longFilename : filename; }
 
+  uint32_t checkFileExist(const char * name);
+
+  void lsRoot(OutPacket* outp);
+
 public:
-  bool saving, logging, sdprinting, cardOK, filenameIsDir, abort_sd_printing;
+  bool saving, logging, sdprinting, cardOK, filenameIsDir;
   char filename[FILENAME_LENGTH], longFilename[LONG_FILENAME_LENGTH];
   int8_t autostart_index;
 private:
@@ -202,17 +236,21 @@ private:
     static uint8_t auto_report_sd_interval;
     static millis_t next_sd_report_ms;
   #endif
+
+
+
+
 };
 
-#if PIN_EXISTS(SD_DETECT)
+#if 1 //PIN_EXISTS(SD_DETECT)
   #if ENABLED(SD_DETECT_INVERTED)
-    #define IS_SD_INSERTED()  READ(SD_DETECT_PIN)
+    #define IS_SD_INSERTED (READ(SD_DETECT_PIN) == HIGH)
   #else
-    #define IS_SD_INSERTED() !READ(SD_DETECT_PIN)
+    #define IS_SD_INSERTED (READ(SD_DETECT_PIN) == LOW)
   #endif
 #else
   // No card detect line? Assume the card is inserted.
-  #define IS_SD_INSERTED() true
+  #define IS_SD_INSERTED true
 #endif
 
 extern CardReader card;
@@ -220,11 +258,13 @@ extern CardReader card;
 #endif // SDSUPPORT
 
 #if ENABLED(SDSUPPORT)
-  #define IS_SD_PRINTING()  card.sdprinting
-  #define IS_SD_FILE_OPEN() card.isFileOpen()
+  #define IS_SD_PRINTING (card.sdprinting)
+  #define IS_SD_FILE_OPEN (card.isFileOpen())
 #else
-  #define IS_SD_PRINTING()  false
-  #define IS_SD_FILE_OPEN() false
+  #define IS_SD_PRINTING (false)
+  #define IS_SD_FILE_OPEN (false)
 #endif
+
+
 
 #endif // _CARDREADER_H_

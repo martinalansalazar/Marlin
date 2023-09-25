@@ -255,11 +255,18 @@
   #define LCD_CLICKED false
 #endif
 
+#define LCD_MESSAGE(x)			lcd_setstatusPGM(x)		
 #define LCD_MESSAGEPGM(x)      lcd_setstatusPGM(PSTR(x))
 #define LCD_ALERTMESSAGEPGM(x) lcd_setalertstatusPGM(PSTR(x))
 
 #if ENABLED(SD_REPRINT_LAST_SELECTED_FILE)
   void lcd_reselect_last_file();
+#endif
+
+#if ENABLED(ULTIPANEL) && ENABLED(SDSUPPORT)
+  extern bool abort_sd_printing;
+#else
+  constexpr bool abort_sd_printing = false;
 #endif
 
 #endif // ULTRALCD_H

@@ -233,7 +233,11 @@ static void lcd_implementation_status_screen() {
   if (PAGE_UNDER(STATUS_SCREENHEIGHT + 1)) {
 
     u8g.drawBitmapP(
-      STATUS_SCREEN_X, STATUS_SCREEN_Y,
+#ifdef BRAND_MP
+      STATUS_SCREEN_X + 10, STATUS_SCREEN_Y,
+#else
+	STATUS_SCREEN_X + 8, STATUS_SCREEN_Y,
+#endif
       (STATUS_SCREENWIDTH + 7) / 8, STATUS_SCREENHEIGHT,
       #if HAS_FAN0
         #if FAN_ANIM_FRAMES > 2
@@ -298,12 +302,12 @@ static void lcd_implementation_status_screen() {
     // Progress bar frame
     //
     #define PROGRESS_BAR_X 54
-    #define PROGRESS_BAR_WIDTH (LCD_PIXEL_WIDTH - PROGRESS_BAR_X)
+    #define PROGRESS_BAR_WIDTH (LCD_PIXEL_WIDTH - PROGRESS_BAR_X)		// 74
 
-    if (PAGE_CONTAINS(49, 52 - (TALL_FONT_CORRECTION)))       // 49-52 (or 49-51)
+    if (PAGE_CONTAINS(49, 52 - 1))       // 49-52 (or 49-51)
       u8g.drawFrame(
         PROGRESS_BAR_X, 49,
-        PROGRESS_BAR_WIDTH, 4 - (TALL_FONT_CORRECTION)
+        PROGRESS_BAR_WIDTH, 4 - 1
       );
 
     #if DISABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -316,10 +320,10 @@ static void lcd_implementation_status_screen() {
       // Progress bar solid part
       //
 
-      if (PAGE_CONTAINS(50, 51 - (TALL_FONT_CORRECTION)))     // 50-51 (or just 50)
+      if (PAGE_CONTAINS(50, 51 - 1))     // 50-51 (or just 50)
         u8g.drawBox(
           PROGRESS_BAR_X + 1, 50,
-          (uint16_t)((PROGRESS_BAR_WIDTH - 2) * progress_bar_percent * 0.01), 2 - (TALL_FONT_CORRECTION)
+          (uint16_t)((PROGRESS_BAR_WIDTH - 2) * progress_bar_percent * 0.01), 2 - 1
         );
 
       //
@@ -443,6 +447,7 @@ static void lcd_implementation_status_screen() {
     lcd_setFont(FONT_STATUSMENU);
     u8g.setPrintPos(12, 50);
     lcd_print(itostr3(feedrate_percentage));
+	//lcd_print("100");
     u8g.print('%');
 
     //
@@ -466,7 +471,7 @@ static void lcd_implementation_status_screen() {
   // Status line
   //
 
-  #define STATUS_BASELINE (55 + INFO_FONT_HEIGHT)
+  #define STATUS_BASELINE (54 + INFO_FONT_HEIGHT)
 
   if (PAGE_CONTAINS(STATUS_BASELINE - (INFO_FONT_HEIGHT - 1), STATUS_BASELINE)) {
     u8g.setPrintPos(0, STATUS_BASELINE);

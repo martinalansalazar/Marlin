@@ -165,6 +165,18 @@ void safe_delay(millis_t ms) {
   }
 
   // Convert signed float to string (6 digit) with -1.234 / _0.000 / +1.234 format
+  char* ftostr42sign(const float &f, char plus/*=' '*/) {
+	  long i = (f * 1000 + (f < 0 ? -5 : 5)) / 10;
+	  conv[1] = i ? MINUSOR(i, plus) : ' ';
+	  conv[2] = DIGIMOD(i, 1000);
+	  conv[3] = DIGIMOD(i, 100);
+	  conv[4] = '.';
+	  conv[5] = DIGIMOD(i, 10);
+	  conv[6] = DIGIMOD(i, 1);
+	  return &conv[1];
+  }
+
+  // Convert signed float to string (6 digit) with -1.234 / _0.000 / +1.234 format
   char* ftostr43sign(const float &f, char plus/*=' '*/) {
     long i = (f * 10000 + (f < 0 ? -5: 5)) / 10;
     conv[1] = i ? MINUSOR(i, plus) : ' ';

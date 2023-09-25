@@ -641,7 +641,7 @@
 // #if defined(SCL) && SCL >= 0
 //   REPORT_NAME_DIGITAL(__LINE__, SCL)
 // #endif
-#if PIN_EXISTS(SD_DETECT)
+#if 1 ///PIN_EXISTS(SD_DETECT)
   REPORT_NAME_DIGITAL(__LINE__, SD_DETECT_PIN)
 #endif
 // #if defined(SDA) && SDA >= 0

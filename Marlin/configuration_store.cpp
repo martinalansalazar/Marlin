@@ -77,10 +77,6 @@
   #define LPQ_LEN thermalManager.lpq_len
 #endif
 
-#if ENABLED(BLTOUCH)
-  extern bool bltouch_last_written_mode;
-#endif
-
 #pragma pack(push, 1) // No padding between variables
 
 typedef struct PID { float Kp, Ki, Kd; } PID;
@@ -162,11 +158,6 @@ typedef struct SettingsDataStruct {
   //
   bool planner_leveling_active;                         // M420 S  planner.leveling_active
   int8_t ubl_storage_slot;                              // ubl.storage_slot
-
-  //
-  // BLTOUCH
-  //
-  bool bltouch_last_written_mode;
 
   //
   // DELTA / [XYZ]_DUAL_ENDSTOPS
@@ -282,6 +273,14 @@ typedef struct SettingsDataStruct {
   float filament_change_unload_length[MAX_EXTRUDERS],   // M603 T U
         filament_change_load_length[MAX_EXTRUDERS];     // M603 T L
 
+  uint8_t wtvar_showWelcome;
+  uint8_t wtvar_gohome;
+  uint8_t wtvar_goDebugMenu;
+  uint8_t wtvar_language;
+  uint8_t wtvar_enablefilamentruncout;
+  uint8_t door_enable;
+  uint8_t wtvar_Z_MAX_POS;
+
 } SettingsData;
 
 #pragma pack(pop)
@@ -317,7 +316,7 @@ void MarlinSettings::postprocess() {
   #endif
 
   #if ENABLED(PIDTEMP)
-    thermalManager.update_pid();
+    thermalManager.updatePID();
   #endif
 
   #if DISABLED(NO_VOLUMETRICS)
@@ -363,6 +362,7 @@ void MarlinSettings::postprocess() {
 
 #if ENABLED(EEPROM_SETTINGS)
 
+  #define DUMMY_PID_VALUE 3000.0f
   #define EEPROM_START() int eeprom_index = EEPROM_OFFSET
   #define EEPROM_SKIP(VAR) eeprom_index += sizeof(VAR)
   #define EEPROM_WRITE(VAR) write_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc)
@@ -439,8 +439,8 @@ void MarlinSettings::postprocess() {
 
     eeprom_error = false;
 
-    EEPROM_WRITE(ver);     // invalidate data first
-    EEPROM_SKIP(working_crc); // Skip the checksum slot
+    EEPROM_WRITE(ver);     // invalidate data first			
+    EEPROM_SKIP(working_crc); // Skip the checksum slot			
 
     working_crc = 0; // clear before first "real data"
 
@@ -581,20 +581,6 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(storage_slot);
     #endif // AUTO_BED_LEVELING_UBL
 
-    //
-    // BLTOUCH
-    //
-    {
-      _FIELD_TEST(bltouch_last_written_mode);
-      #if ENABLED(BLTOUCH)
-        const bool &eeprom_bltouch_last_written_mode = bltouch_last_written_mode;
-      #else
-        constexpr bool eeprom_bltouch_last_written_mode = false;
-      #endif
-      EEPROM_WRITE(eeprom_bltouch_last_written_mode);
-    }
-
-
     // 11 floats for DELTA / [XYZ]_DUAL_ENDSTOPS
     #if ENABLED(DELTA)
 
@@ -679,7 +665,7 @@ void MarlinSettings::postprocess() {
         else
       #endif // !PIDTEMP
         {
-          dummy = NAN; // When read, will not change the existing value
+          dummy = DUMMY_PID_VALUE; // When read, will not change the existing value
           EEPROM_WRITE(dummy); // Kp
           dummy = 0;
           for (uint8_t q = 3; q--;) EEPROM_WRITE(dummy); // Ki, Kd, Kc
@@ -695,7 +681,7 @@ void MarlinSettings::postprocess() {
     EEPROM_WRITE(LPQ_LEN);
 
     #if DISABLED(PIDTEMPBED)
-      dummy = NAN;
+      dummy = DUMMY_PID_VALUE;
       for (uint8_t q = 3; q--;) EEPROM_WRITE(dummy);
     #else
       EEPROM_WRITE(thermalManager.bedKp);
@@ -988,6 +974,27 @@ void MarlinSettings::postprocess() {
       for (uint8_t q = MAX_EXTRUDERS * 2; q--;) EEPROM_WRITE(dummy);
     #endif
 
+	  // save go home var
+	  EEPROM_WRITE(wtvar_gohome);
+
+	  // save show welcome
+	  EEPROM_WRITE(wtvar_showWelcome);
+
+	  // save show debug menu
+	  EEPROM_WRITE(wtvar_goDebugMenu);
+
+	  // save language setting
+	  EEPROM_WRITE(wtvar_language);
+
+	  // save filament runout enable
+	  EEPROM_WRITE(wtvar_enablefilamentruncout);
+
+	  // save door enable
+	  EEPROM_WRITE(door_enable);
+
+	  // save z max pos
+	  EEPROM_WRITE(wtvar_Z_MAX_POS);
+
     //
     // Validate CRC and Data Size
     //
@@ -1020,8 +1027,10 @@ void MarlinSettings::postprocess() {
         store_mesh(ubl.storage_slot);
     #endif
 
+
+
     return !eeprom_error;
-  }
+  }	// end of save()
 
   /**
    * M501 - Retrieve Configuration
@@ -1214,19 +1223,6 @@ void MarlinSettings::postprocess() {
       #endif // AUTO_BED_LEVELING_UBL
 
       //
-      // BLTOUCH
-      //
-      {
-        _FIELD_TEST(bltouch_last_written_mode);
-        #if ENABLED(BLTOUCH)
-          bool &eeprom_bltouch_last_written_mode = bltouch_last_written_mode;
-        #else
-          bool eeprom_bltouch_last_written_mode;
-        #endif
-        EEPROM_READ(eeprom_bltouch_last_written_mode);
-      }
-
-      //
       // DELTA Geometry or Dual Endstops offsets
       //
 
@@ -1302,7 +1298,7 @@ void MarlinSettings::postprocess() {
       #if ENABLED(PIDTEMP)
         for (uint8_t e = 0; e < MAX_EXTRUDERS; e++) {
           EEPROM_READ(dummy); // Kp
-          if (e < HOTENDS && !isnan(dummy)) {
+          if (e < HOTENDS && dummy != DUMMY_PID_VALUE) {
             // do not need to scale PID values as the values in EEPROM are already scaled
             if (!validating) PID_PARAM(Kp, e) = dummy;
             EEPROM_READ(PID_PARAM(Ki, e));
@@ -1339,7 +1335,7 @@ void MarlinSettings::postprocess() {
 
       #if ENABLED(PIDTEMPBED)
         EEPROM_READ(dummy); // bedKp
-        if (!isnan(dummy)) {
+        if (dummy != DUMMY_PID_VALUE) {
           if (!validating) thermalManager.bedKp = dummy;
           EEPROM_READ(thermalManager.bedKi);
           EEPROM_READ(thermalManager.bedKd);
@@ -1611,6 +1607,40 @@ void MarlinSettings::postprocess() {
         for (uint8_t q = MAX_EXTRUDERS * 2; q--;) EEPROM_READ(dummy);
       #endif
 
+
+	// load go home var
+	EEPROM_READ(wtvar_gohome);
+	if (wtvar_gohome != 1)
+		wtvar_gohome = 0;
+
+	// load show welcome var
+	EEPROM_READ(wtvar_showWelcome);
+	if (wtvar_showWelcome != 0)
+		wtvar_showWelcome = 1;
+
+	EEPROM_READ(wtvar_goDebugMenu);
+	if (wtvar_goDebugMenu != 1)
+		wtvar_goDebugMenu = 0;
+
+	EEPROM_READ(wtvar_language);
+	if (wtvar_language > 15)
+		wtvar_language = 0;
+
+	EEPROM_READ(wtvar_enablefilamentruncout);
+	if (wtvar_enablefilamentruncout != 0)
+		wtvar_enablefilamentruncout = 1;
+
+	EEPROM_READ(door_enable);
+	if (door_enable != 0)
+		door_enable = 1;
+
+	EEPROM_READ(wtvar_Z_MAX_POS);
+	if (wtvar_Z_MAX_POS > 170)
+		wtvar_Z_MAX_POS = 170;
+	else if (wtvar_Z_MAX_POS < 165)
+		wtvar_Z_MAX_POS = 165;
+
+
       eeprom_error = size_error(eeprom_index - (EEPROM_OFFSET));
       if (eeprom_error) {
         SERIAL_ECHO_START();
@@ -1682,8 +1712,9 @@ void MarlinSettings::postprocess() {
       if (!validating) report();
     #endif
 
+
     return !eeprom_error;
-  }
+  }  // end of _load()
 
   bool MarlinSettings::validate() {
     validating = true;
@@ -1868,9 +1899,6 @@ void MarlinSettings::reset() {
     reset_bed_level();
   #endif
 
-  #if HAS_BED_PROBE
-    zprobe_zoffset = Z_PROBE_OFFSET_FROM_EXTRUDER;
-  #endif
 
   #if ENABLED(DELTA)
     const float adj[ABC] = DELTA_ENDSTOP_ADJ,
@@ -2016,13 +2044,20 @@ void MarlinSettings::reset() {
     }
   #endif
 
+	wtvar_gohome = 0;
+	wtvar_showWelcome = 1;
+	wtvar_goDebugMenu = 0;
+	wtvar_enablefilamentruncout = 0;
+	door_enable = 0;
+	//wtvar_Z_MAX_POS = 170;
+
   postprocess();
 
   #if ENABLED(EEPROM_CHITCHAT)
     SERIAL_ECHO_START();
     SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
   #endif
-}
+}	// end of reset()
 
 #if DISABLED(DISABLE_M503)
 

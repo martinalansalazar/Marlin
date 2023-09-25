@@ -41,7 +41,7 @@
 extern const char echomagic[] PROGMEM;
 extern const char errormagic[] PROGMEM;
 
-#define SERIAL_CHAR(x) ((void)MYSERIAL0.write(x))
+#define SERIAL_CHAR(x) {(void)MYSERIAL0.write0(x); (void)MYSERIAL0.write3(x);}		
 #define SERIAL_EOL() SERIAL_CHAR('\n')
 
 #define SERIAL_PRINT(x,b)      MYSERIAL0.print(x,b)
@@ -50,7 +50,7 @@ extern const char errormagic[] PROGMEM;
 
 #define SERIAL_FLUSH()         MYSERIAL0.flush()
 #if TX_BUFFER_SIZE > 0
-  #define SERIAL_FLUSHTX()     MYSERIAL0.flushTX()
+#define SERIAL_FLUSHTX()     { MYSERIAL0.flushTX0(); MYSERIAL0.flushTX3(); }
 #endif
 
 #define SERIAL_PROTOCOLCHAR(x)              SERIAL_CHAR(x)
